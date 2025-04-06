@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>BTC/USD Price Stream</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .price-display {
+            font-size: 24px;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+
+        .price-history {
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .price-entry {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .price-entry:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>BTC/USD Price Stream</h1>
+    <div class="container">
+        <div class="price-display" id="current-price">Waiting for price update...</div>
+        <div class="status" id="connection-status">Connecting...</div>
+        <h2>Price History</h2>
+        <div class="price-history" id="price-history"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const priceDisplay = document.getElementById('current-price');
+            const priceHistory = document.getElementById('price-history');
+            const connectionStatus = document.getElementById('connection-status');
+            let lastTimestamp = 0;
+
+            // Parse the query string to check for 'since' parameter
+            function getQueryParam(name) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name);
+            }
+
+            const sinceParm = getQueryParam('since');
+            if (sinceParm) {
+                lastTimestamp = parseInt(sinceParm, 10);
+                connectionStatus.textContent = 'Initializing with timestamp: ' + lastTimestamp;
+            }
+
+            function connectEventSource() {
+                let url = '/prices/stream';
+                if (lastTimestamp > 0) {
+                    url += '?since=' + lastTimestamp;
+                }
+
+                connectionStatus.textContent = 'Connecting...';
+                const eventSource = new EventSource(url);
+
+                eventSource.onopen = function () {
+                    connectionStatus.textContent = 'Connected';
+                };
+
+                eventSource.onmessage = function (event) {
+                    const data = JSON.parse(event.data);
+                    lastTimestamp = data.timestamp;
+
+                    // Format price with commas and 2 decimal places
+                    const formattedPrice = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD'
+                    }).format(data.price);
+
+                    // Update current price display
+                    priceDisplay.textContent = formattedPrice;
+
+                    // Add to history
+                    const date = new Date(data.timestamp * 1000);
+                    const timeString = date.toLocaleTimeString();
+
+                    const historyEntry = document.createElement('div');
+                    historyEntry.className = 'price-entry';
+                    historyEntry.textContent = timeString + ': ' + formattedPrice;
+
+                    priceHistory.insertBefore(historyEntry, priceHistory.firstChild);
+                };
+
+                eventSource.onerror = function () {
+                    connectionStatus.textContent = 'Connection lost. Reconnecting...';
+                    eventSource.close();
+
+                    // Reconnect after a short delay
+                    setTimeout(connectEventSource, 3000);
+                };
+            }
+
+            // Initial connection
+            connectEventSource();
+        });
+    </script>
+</body>
+
+</html>
