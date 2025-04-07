@@ -44,6 +44,14 @@ clean:
 run:
 	$(GORUN) $(SERVER_MAIN)
 
+# Run with memory store
+run-memory:
+	STORE_TYPE=memory STORE_SIZE=100 $(GORUN) $(SERVER_MAIN)
+
+# Run with MongoDB store
+run-mongo:
+	STORE_TYPE=mongo MONGO_URI=mongodb://localhost:27017 $(GORUN) $(SERVER_MAIN)
+
 # Run all tests
 test:
 	$(GOTEST) -v ./...
@@ -78,6 +86,10 @@ docker-build:
 docker-run:
 	docker run -p 8082:8082 $(DOCKER_IMAGE):$(DOCKER_TAG)
 
+# Run MongoDB container for local development
+mongo-dev:
+	docker run -d --name mongo-dev -p 27017:27017 mongo:latest
+
 # Update go.mod and go.sum
 tidy:
 	$(GOMOD) tidy
@@ -89,6 +101,8 @@ help:
 	@echo "  make build        - Build the application"
 	@echo "  make clean        - Remove build artifacts"
 	@echo "  make run          - Run the application"
+	@echo "  make run-memory   - Run the application with memory store"
+	@echo "  make run-mongo    - Run the application with mongodb store"
 	@echo "  make test         - Run all tests"
 	@echo "  make test-verbose - Run tests with verbose output"
 	@echo "  make test-coverage - Run tests with coverage report"
@@ -97,4 +111,5 @@ help:
 	@echo "  make lint         - Run linter"
 	@echo "  make docker-build - Build docker image"
 	@echo "  make docker-run   - Run in docker"
+	@echo "  make mongo-dev    - Run MongoDB container for local dev"
 	@echo "  make tidy         - Update dependencies"

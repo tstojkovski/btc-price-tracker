@@ -24,7 +24,8 @@ The application follows a clean, modular architecture:
 │   ├── service/      # Business logic services
 │   └── store/        # Data storage implementations
 ├── static/           # Static web assets
-└── Dockerfile        # Docker configuration
+├── Dockerfile        # Docker configuration
+└── Makefile          # Makefile
 ```
 
 ### Components
