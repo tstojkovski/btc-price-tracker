@@ -62,8 +62,7 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		_, err = w.Write(indexContent)
-		if err != nil {
+		if _, err = w.Write(indexContent); err != nil {
 			log.Printf("Error writing: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
