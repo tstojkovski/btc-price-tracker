@@ -47,8 +47,8 @@ The application follows a clean, modular architecture:
 2. Build and run the server:
 
 ```bash
-go build -o server ./cmd/server/main.go
-./server
+make build
+make run
 ```
 
 3. Open your browser to `http://localhost:8082`
@@ -64,8 +64,8 @@ The application can be configured using environment variables:
 To build and run with Docker:
 
 ```bash
-docker build -t btc-price-tracker .
-docker run -p 8082:8082 -e STORE_SIZE=1000 btc-price-tracker
+docker-build
+docker-run
 ```
 
 ## API Endpoints
