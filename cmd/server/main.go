@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 func main() {
@@ -61,12 +62,18 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		w.Write(indexContent)
+		_, err = w.Write(indexContent)
+		if err != nil {
+			log.Printf("Error writing: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 	})
 
 	server := &http.Server{
-		Addr:    ":8082",
-		Handler: mux,
+		Addr:              ":8082",
+		Handler:           mux,
+		ReadHeaderTimeout: time.Second * 30,
 	}
 
 	log.Println("Server starting on :8082")
