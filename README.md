@@ -11,6 +11,7 @@ A Go service that streams real-time Bitcoin (BTC) price data in USD to clients u
 - In-memory storage with configurable capacity
 - Proper concurrency handling using Go's goroutines and channels
 - Clean shutdown with context cancellation
+- Additional, configurable store implementation (MongoDB with TTL) in a PR [https://github.com/tstojkovski/btc-price-tracker/pull/1], since it's out of scope
 
 ## Architecture
 
@@ -38,7 +39,7 @@ The application follows a clean, modular architecture:
 
 ### Prerequisites
 
-- Go 1.19 or later
+- Go 1.23
 - Internet connection (for API access)
 
 ### Running locally
