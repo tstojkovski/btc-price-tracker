@@ -4,23 +4,21 @@ import (
 	"btc-price-tracker/internal/domain"
 	"btc-price-tracker/internal/store"
 	"context"
-	"encoding/json"
-	"errors"
-	"io"
 	"log"
-	"net/http"
 	"time"
 )
 
 type PriceService struct {
-	store      store.EventStore
-	updateChan chan domain.PriceUpdateEvent
+	store         store.EventStore
+	updateChan    chan domain.PriceUpdateEvent
+	priceProvider PriceProvider
 }
 
-func NewPriceService(store store.EventStore) *PriceService {
+func NewPriceService(store store.EventStore, priceProvider PriceProvider) *PriceService {
 	return &PriceService{
-		store:      store,
-		updateChan: make(chan domain.PriceUpdateEvent, 1),
+		store:         store,
+		priceProvider: priceProvider,
+		updateChan:    make(chan domain.PriceUpdateEvent, 1),
 	}
 }
 
@@ -40,7 +38,7 @@ func (ps *PriceService) fetchPrices(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			price, err := fetchBTCPrice()
+			price, err := ps.priceProvider.FetchPrice()
 			if err != nil {
 				log.Printf("Error fetching price: %v", err)
 				continue
@@ -68,40 +66,4 @@ func (ps *PriceService) fetchPrices(ctx context.Context) {
 			return
 		}
 	}
-}
-
-func fetchBTCPrice() (float64, error) {
-	// Use coingecko for now
-	response, err := http.Get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
-	if err != nil {
-		return 0, err
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return 0, err
-	}
-
-	// Parse the JSON response
-	var result CoinGeckoBTCPriceResult
-	if err := json.Unmarshal(body, &result); err != nil {
-		return 0, err
-	}
-
-	if result.Status != nil && result.Status.ErrorCode != 0 {
-		return 0, errors.New(result.Status.ErrorMessage)
-	}
-
-	return result.Bitcoin.USD, nil
-}
-
-type CoinGeckoBTCPriceResult struct {
-	Bitcoin struct {
-		USD float64 `json:"usd"`
-	} `json:"bitcoin"`
-	Status *struct {
-		ErrorCode    int    `json:"error_code"`
-		ErrorMessage string `json:"error_message"`
-	} `json:"status"`
 }
