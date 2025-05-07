@@ -23,6 +23,12 @@ func setupMockAPI(price float64) *httptest.Server {
 	}))
 }
 
+type MockPriceProvider struct{}
+
+func (m *MockPriceProvider) FetchPrice() (float64, error) {
+	return 0, nil
+}
+
 func TestPriceService_FetchPrice(t *testing.T) {
 	// Setup a mock API server
 	mockServer := setupMockAPI(55000.0)
@@ -31,7 +37,7 @@ func TestPriceService_FetchPrice(t *testing.T) {
 	// Replace the original URL with our mock server URL in the fetchBTCPrice function
 
 	memStore := store.NewMemoryStore(10)
-	priceService := NewPriceService(memStore)
+	priceService := NewPriceService(memStore, &MockPriceProvider{})
 
 	// Get the update channel
 	updateChan := priceService.GetUpdateChannel()
@@ -42,7 +48,7 @@ func TestPriceService_FetchPrice(t *testing.T) {
 		Price:     55000.0,
 	}
 
-	// Store it manually (simulating what fetchPrices would do)
+	// Store it manually
 	memStore.Store(mockUpdate)
 
 	// Send to the update channel
